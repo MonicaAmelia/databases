@@ -7,8 +7,7 @@ Creating a new table
 /*
 ON PRIMARY KEYS - While not required in postgres, it is best practice to have a
  primary key on relational databases to ensure uniqueness in table data. Without
- uniqueness, multiple rows of data will be retrieved and there will be no way to
- validate which row of data is required for the use case.
+ uniqueness, the database will allow duplication of data in tables.
 
  Primary keys can be one column or a set of columns. When a set of columns is 
  chosen, the combination of the column values must be unique, allowing for 
