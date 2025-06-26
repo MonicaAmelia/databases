@@ -1,0 +1,90 @@
+/*
+Creating a new table
+
+*/
+
+
+/*
+ON PRIMARY KEYS - While not required in postgres, it is best practice to have a
+ primary key on relational databases to ensure uniqueness in table data. Without
+ uniqueness, multiple rows of data will be retrieved and there will be no way to
+ validate which row of data is required for the use case.
+
+ Primary keys can be one column or a set of columns. When a set of columns is 
+ chosen, the combination of the column values must be unique, allowing for 
+ single columns to have duplicated data. In the example below, the tuple of 
+ email and username would allow for duplicated usernames because there is a way
+ to differentiate between two new_username_1s. This would also allow a person 
+ to create and manage multiple accounts with one email and password.
+*/
+
+
+CREATE TABLE player (
+    email    varchar(50),            -- unique identifier for authorization
+    username varchar(50),            -- game tag
+    password varchar(50) NOT NULL,   -- user authorization information
+    wins     int DEFAULT 0 NOT NULL, -- user game stats
+    losses   int DEFAULT 0 NOT NULL, -- user game stats
+    balance  int DEFAULT 0 NOT NULL, -- in-game score
+    PRIMARY KEY (email, username)
+);
+
+/*
+ Specifying DEFAULT 0 will ensure INSERT, UPSERT and UPDATE transactions will 
+ not leave the values empty even when data is not specified in the VALUES list. 
+
+*/
+
+INSERT INTO player VALUES (
+    'abc123',
+    'new_username_1',
+    'bad_password'
+);
+
+/*
+ ON VARIABLES - We can hide important information by setting variables through
+ the environment and then executing on those variables. With PSQL we can define
+ variables with the `\set` command. Note the backslash rather than being a 
+ TRANSACTION command `SET` which has been unsupported since psql@7.
+*/
+
+\set variable_name 'variable_value'
+
+COPY player FROM :player_copy_data CSV;
+
+/*
+ON TIMESTAMPS - Dates and events are very important information for statistics.
+When storing dates and times in a database, it's important to ensure some form
+of standardization so computations stay consistent on dates and times. Below, 
+the table utilizes timestamptz to ensure incoming data has a timezone associated
+with it. A valid timezone will ensure any timestamp can be converted to a 
+normalized timezone (usually UTC) for calculations. When computing the 
+difference between times, we can utilize built in functions such as 
+EXTRACT(end_time - start_time) or 
+AGE(end_time, start_time)
+*/
+
+-- References both primary key columns from player
+CREATE TABLE game (
+    id           varchar(50) PRIMARY KEY, -- game seed
+    north_id     varchar(50) REFERENCES player (email),
+    south_id     varchar(50) REFERENCES player (email),
+    east_id      varchar(50) REFERENCES player (email),
+    west_id      varchar(50) REFERENCES player (email),
+    first_place  varchar(50) REFERENCES player (username),
+    second_place varchar(50) REFERENCES player (username),
+    third_place  varchar(50) REFERENCES player (username),
+    fourth_place varchar(50) REFERENCES player (username),
+    start_time   timestamptz NOT NULL DEFAULT NOW(),
+    end_time     timestamptz
+)
+
+
+/*
+ ON COPY - we can load existing data into the database with the COPY keyword. It
+ is important to keep in mind there is no extra computation or effort done on
+ the data. If the file with data being copied into the database is missing 
+ required values or breaks any of the constraints set on the database, the COPY
+ transaction will fail and no writes will be made. It's important to validate 
+ the data before attempting to COPY it to the database so errors don't occur.
+*/
