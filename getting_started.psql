@@ -45,9 +45,15 @@ INSERT INTO player VALUES (
  the environment and then executing on those variables. With PSQL we can define
  variables with the `\set` command. Note the backslash rather than being a 
  TRANSACTION command `SET` which has been unsupported since psql@7.
+
+ When attempting to set a filename for a COPY, the quotes are 
+ required for the transaction to complete successfully. We must escape the 
+ single qutoes with backslashes to prevent psql from interpreting them as code. 
+ The below COPY transaction utilizes an environment variable set prior to the 
+ execution of the file.
 */
 
-\set variable_name 'variable_value'
+\set variable_name '\'/absolute_path/file_name.file_extension\''
 
 COPY player FROM :player_copy_data CSV;
 
