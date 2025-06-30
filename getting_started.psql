@@ -1,10 +1,4 @@
 /*
-Creating a new table
-
-*/
-
-
-/*
 ON PRIMARY KEYS - While not required in postgres, it is best practice to have a
  primary key on relational databases to ensure uniqueness in table data. Without
  uniqueness, the database will allow duplication of data in tables.
@@ -17,9 +11,13 @@ ON PRIMARY KEYS - While not required in postgres, it is best practice to have a
  to create and manage multiple accounts with one email and password.
 */
 
+/* 
+Ensures the script will not error on repeat tables during CREATE transactions.
+*/
+DROP TABLE IF EXISTS player;
 
 CREATE TABLE player (
-    email    varchar(50),            -- unique identifier for authorization
+    email    varchar(150),            -- unique identifier for authorization
     username varchar(50),            -- game tag
     password varchar(50) NOT NULL,   -- user authorization information
     wins     int DEFAULT 0 NOT NULL, -- user game stats
@@ -55,6 +53,9 @@ INSERT INTO player VALUES (
 
 \set variable_name '\'/absolute_path/file_name.file_extension\''
 
+-- var player_copy_data is set prior to running this script.
+-- If not set prior, this script will fail.
+
 COPY player FROM :player_copy_data CSV;
 
 /*
@@ -69,6 +70,11 @@ EXTRACT(end_time - start_time) or
 AGE(end_time, start_time)
 */
 
+/* 
+Ensures the script will not error on repeat tables during CREATE transactions.
+*/
+DROP TABLE IF EXISTS game;
+
 -- References both primary key columns from player
 CREATE TABLE game (
     id           varchar(50) PRIMARY KEY, -- game seed
@@ -82,7 +88,7 @@ CREATE TABLE game (
     fourth_place varchar(50) REFERENCES player (username),
     start_time   timestamptz NOT NULL DEFAULT NOW(),
     end_time     timestamptz
-)
+);
 
 
 /*
@@ -92,4 +98,8 @@ CREATE TABLE game (
  required values or breaks any of the constraints set on the database, the COPY
  transaction will fail and no writes will be made. It's important to validate 
  the data before attempting to COPY it to the database so errors don't occur.
+
+ It is quite uncommon to need to run a COPY transaction in a production 
+ environment. More often COPY is used for populating test infrastructure. This 
+ is great for end to end testing and acceptance testing in lower environments.
 */
